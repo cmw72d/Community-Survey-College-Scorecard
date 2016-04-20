@@ -1,0 +1,71 @@
+library(ggplot2)
+library(dplyr)
+
+scorecard = group_by(Scorecard, st_fips) %>% filter(AVGFACSAL != "NA") %>% summarize(mean = mean(AVGFACSAL))
+
+ss13pusa$ST[ss13pusa$ST %in% "1"] <- "Alabama"
+ss13pusa$ST[ss13pusa$ST %in% "2"] <- "Alaska"
+ss13pusa$ST[ss13pusa$ST %in% "4"] <- "Arizona"
+ss13pusa$ST[ss13pusa$ST %in% "5"] <- "Arkansas"
+ss13pusa$ST[ss13pusa$ST %in% "6"] <- "California"
+ss13pusa$ST[ss13pusa$ST %in% "8"] <- "Colorado"
+ss13pusa$ST[ss13pusa$ST %in% "9"] <- "Connecticut"
+ss13pusa$ST[ss13pusa$ST %in% "10"] <- "Delaware"
+ss13pusa$ST[ss13pusa$ST %in% "11"] <- "District of Columbia"
+ss13pusa$ST[ss13pusa$ST %in% "12"] <- "Florida"
+ss13pusa$ST[ss13pusa$ST %in% "14"] <- "Georgia"
+ss13pusa$ST[ss13pusa$ST %in% "15"] <- "Hawaii"
+ss13pusa$ST[ss13pusa$ST %in% "16"] <- "Idaho"
+ss13pusa$ST[ss13pusa$ST %in% "17"] <- "Illinois"
+ss13pusa$ST[ss13pusa$ST %in% "18"] <- "Indiana"
+ss13pusa$ST[ss13pusa$ST %in% "19"] <- "Iowa"
+ss13pusa$ST[ss13pusa$ST %in% "20"] <- "Kansas"
+ss13pusa$ST[ss13pusa$ST %in% "21"] <- "Kentucky"
+ss13pusa$ST[ss13pusa$ST %in% "22"] <- "Louisiana"
+ss13pusa$ST[ss13pusa$ST %in% "23"] <- "Maine"
+ss13pusa$ST[ss13pusa$ST %in% "24"] <- "Maryland"
+ss13pusa$ST[ss13pusa$ST %in% "25"] <- "Massachusetts"
+ss13pusa$ST[ss13pusa$ST %in% "26"] <- "Michigan"
+ss13pusa$ST[ss13pusa$ST %in% "27"] <- "Minnesota"
+ss13pusa$ST[ss13pusa$ST %in% "28"] <- "Mississippi"
+ss13pusa$ST[ss13pusa$ST %in% "29"] <- "Missouri"
+ss13pusa$ST[ss13pusa$ST %in% "30"] <- "Montana"
+ss13pusa$ST[ss13pusa$ST %in% "31"] <- "Nebraska"
+ss13pusa$ST[ss13pusa$ST %in% "32"] <- "Nevada"
+ss13pusa$ST[ss13pusa$ST %in% "33"] <- "New Hampshire"
+ss13pusa$ST[ss13pusa$ST %in% "34"] <- "New Jersey"
+ss13pusa$ST[ss13pusa$ST %in% "35"] <- "New Mexico"
+ss13pusa$ST[ss13pusa$ST %in% "36"] <- "New York"
+ss13pusa$ST[ss13pusa$ST %in% "37"] <- "North Carolina"
+ss13pusa$ST[ss13pusa$ST %in% "38"] <- "North Dakota"
+ss13pusa$ST[ss13pusa$ST %in% "39"] <- "Ohio"
+ss13pusa$ST[ss13pusa$ST %in% "40"] <- "Oklahoma"
+ss13pusa$ST[ss13pusa$ST %in% "41"] <- "Oregon"
+ss13pusa$ST[ss13pusa$ST %in% "42"] <- "Pennsylvania"
+ss13pusa$ST[ss13pusa$ST %in% "44"] <- "Rhode Island"
+ss13pusa$ST[ss13pusa$ST %in% "45"] <- "South Carolina"
+ss13pusa$ST[ss13pusa$ST %in% "46"] <- "South Dakota"
+ss13pusa$ST[ss13pusa$ST %in% "47"] <- "Tennessee"
+ss13pusa$ST[ss13pusa$ST %in% "48"] <- "Texas"
+ss13pusa$ST[ss13pusa$ST %in% "49"] <- "Utah"
+ss13pusa$ST[ss13pusa$ST %in% "50"] <- "Vermont"
+ss13pusa$ST[ss13pusa$ST %in% "51"] <- "Virginia"
+ss13pusa$ST[ss13pusa$ST %in% "53"] <- "Washington"
+ss13pusa$ST[ss13pusa$ST %in% "54"] <- "West Virginia"
+ss13pusa$ST[ss13pusa$ST %in% "55"] <- "Wisconsin"
+ss13pusa$ST[ss13pusa$ST %in% "56"] <- "Wyoming"
+ss13pusa$ST[ss13pusa$ST %in% "60"] <- "American Samoa"
+ss13pusa$ST[ss13pusa$ST %in% "64"] <- "Federated States of Micronesia"
+ss13pusa$ST[ss13pusa$ST %in% "66"] <- "Guam"
+ss13pusa$ST[ss13pusa$ST %in% "69"] <- "Northern Mariana Islands"
+ss13pusa$ST[ss13pusa$ST %in% "70"] <- "Palau"
+ss13pusa$ST[ss13pusa$ST %in% "72"] <- "Puerto Rico"
+ss13pusa$ST[ss13pusa$ST %in% "78"] <- "Virgin Islands"
+
+
+survey = group_by(ss13pusa, ST) %>% filter(PINCP != "NA" && PINCP > 0 && ST>0) %>% summarize(mean = mean(PINCP))
+
+
+total = merge(scorecard, survey, by.x = "st_fips", by.y = "ST")
+
+ggplot(total, aes(x = AVGFACSAL, y= PINCP, col=ST))+geom_point()
