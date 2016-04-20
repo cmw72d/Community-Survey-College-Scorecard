@@ -1,7 +1,7 @@
 library(ggplot2)
 library(dplyr)
 
-scorecard = group_by(Scorecard, st_fips) %>% filter(AVGFACSAL != "NA") %>% summarize(mean = mean(AVGFACSAL))
+scorecard = group_by(Scorecard, st_fips) %>% filter(COSTT4_A != "NA") %>% summarize(mean = mean(COSTT4_A))
 
 ss13pusa$ST[ss13pusa$ST %in% "1"] <- "Alabama"
 ss13pusa$ST[ss13pusa$ST %in% "2"] <- "Alaska"
@@ -68,4 +68,4 @@ survey = group_by(ss13pusa, ST) %>% filter(PINCP != "NA" && PINCP > 0 && ST>0) %
 
 total = merge(scorecard, survey, by.x = "st_fips", by.y = "ST")
 
-ggplot(total, aes(x = AVGFACSAL, y= PINCP, col=ST))+geom_point()
+ggplot(total, aes(x = COSTT4_A, y= PINCP, col=ST))+geom_point()
