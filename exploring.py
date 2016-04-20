@@ -1,10 +1,70 @@
-#For the second question (household income and family type vs financial aid), use HHT (family type) and HINCP (household income) in college data set, ???_DEBT_MDN in the community survey possibly. Not fully sure, so look it up. 
-
 import sqlite3
 import pandas as pd
 import plotly.plotly as py
 from plotly.graph_objs import *
 from collections import defaultdict as dd
+
+states = {} #dd(str)
+states['01'] = 'AL'
+states['02'] = 'AK'
+states['04'] = 'AZ'
+states['05'] = 'AR'
+states['06'] = 'CA'
+states['08'] = 'CO'
+states['09'] = 'CT'
+states['10'] = 'DE'
+states['11'] = 'DC'
+states['12'] = 'FL'
+states['13'] = 'GA'
+states['15'] = 'HI'
+states['16'] = 'ID'
+states['17'] = 'IL'
+states['18'] = 'IN'
+states['19'] = 'IA'
+states['20'] = 'KS'
+states['21'] = 'KY'
+states['22'] = 'LA'
+states['23'] = 'ME'
+states['24'] = 'MD'
+states['25'] = 'MA'
+states['26'] = 'MI'
+states['27'] = 'MN'
+states['28'] = 'MS'
+states['29'] = 'MO'
+states['30'] = 'MT'
+states['31'] = 'NE'
+states['32'] = 'NV'
+states['33'] = 'NH'
+states['34'] = 'NJ'
+states['35'] = 'NM'
+states['36'] = 'NY'
+states['37'] = 'NC'
+states['38'] = 'ND'
+states['39'] = 'OH'
+states['40'] = 'OK'
+states['41'] = 'OR'
+states['42'] = 'PA'
+states['44'] = 'RI'
+states['45'] = 'SC'
+states['46'] = 'SD'
+states['47'] = 'TN'
+states['48'] = 'TX'
+states['49'] = 'UT'
+states['50'] = 'VT'
+states['51'] = 'VA'
+states['53'] = 'WA'
+states['54'] = 'WV'
+states['55'] = 'WI'
+states['56'] = 'WY'
+
+def get_st_abbr(state_cd):
+	return states[str(state_cd)]
+
+def get_key_in_map(key):
+	for k in states:
+		if states[k] == key:
+			return True;
+	return False
 
 # Sign into plotly
 py.sign_in("tfbbt8", "Chevroletz71")
@@ -13,25 +73,13 @@ py.sign_in("tfbbt8", "Chevroletz71")
 school_conn = sqlite3.connect('school/database.sqlite')
 school_cursor = school_conn.cursor()
 
-survey_conn = sqlite3.connect('database.sqlite')
-survey_cursor = survey_conn.cursor()
-
-# Pct of students at a school within each income bracket
-# cursor.execute('''
-#     select INC_PCT_LO, INC_PCT_M1, INC_PCT_M2, INC_PCT_H1, INC_PCT_H2 from scorecard where
-#     	INC_PCT_LO != 'PrivacySuppressed' and INC_PCT_LO != '' and
-#     	INC_PCT_M1 != 'PrivacySuppressed' and INC_PCT_LO != '' and
-#     	INC_PCT_M2 != 'PrivacySuppressed' and INC_PCT_LO != '' and
-#     	INC_PCT_H1 != 'PrivacySuppressed' and INC_PCT_LO != '' and
-#     	INC_PCT_H2 != 'PrivacySuppressed' and INC_PCT_LO != ''
-#     ''')
-
 # School, state, average family income, average in-state tuition
-school_cursor.executescript('''
-	select instnm, stabbr, faminc, md_faminc, tuitionfee_in from scorecard where
+school_cursor.execute('''
+	select instnm, stabbr, faminc, md_faminc, tuitionfee_in, avgfacsal, debt_mdn from scorecard where
 		faminc != '' and faminc != 'PrivacySuppressed' and md_faminc != ''  and
 		md_faminc != 'PrivacySuppressed' and tuitionfee_in != '' and tuitionfee_in
-		!= 'PrivacySuppressed';
+		!= 'PrivacySuppressed' and avgfacsal != '' and avgfacsal != 'PrivacySuppressed' and
+		avgfacsal > 0 and debt_mdn != '' and debt_mdn != 'PrivacySuppressed' and debt_mdn > 0;
 	''')
 
 school_rows = school_cursor.fetchall()
@@ -43,58 +91,54 @@ school_count = dd(float)
 school_income_ratio = dd(float)
 for row in school_rows:
 	school_avg_income[row[1]] += row[2]
-	school_avg_tuition[row[1]] += row[4]
+	school_avg_tuition[row[1]] += row[6]*12
 	school_count[row[1]] += 1
 
 # Avg income per state
-for key, value in school_avg_tuition.items():
-	value /= school_count[key]
+for key in school_avg_tuition:
+	school_avg_tuition[key] /= school_count[key]
 
-# Avg income per state
-for key, value in school_avg_income.items():
-	value /= school_count[key]
+survey_conn = sqlite3.connect('database.sqlite')
+survey_cursor = survey_conn.cursor()
 
-school_conn.close()
-
-survey_cursor.executescript('''
+survey_cursor.execute('''
 	select st, fes, fincp from survey where
 		st != '' and st != 'PrivacySuppressed' and fes != ''  and
 		fes != 'PrivacySuppressed' and fincp != '' and fincp !=
 		'PrivacySuppressed';
-	;
 	''')
 
 survey_rows = survey_cursor.fetchall()
 
-survey_avg_income
+survey_avg_income = dd(float)
+survey_count = dd(float)
 for row in survey_rows:
-	print(row[0])
+	survey_avg_income[get_st_abbr(row[0])] += row[2]
+	survey_count[get_st_abbr(row[0])] += 1
 
-# for key in school_avg_income:
-# 	school_income_ratio[key] = school_avg_tuition[key] / school_avg_income[key]
+for key in survey_avg_income:
+	survey_avg_income[key] /= survey_count[key]
 
-# print(school_income_ratio)
+# Calculate ratio of income to tuition cost
+for key, value in school_avg_tuition.items():
+	if get_key_in_map(key): # Keys that should not have been...
+		school_income_ratio[key] = school_avg_tuition[key] / survey_avg_income[key]
 
-# # Create dataframe with panda
-# df = pd.DataFrame([[ij for ij in i] for i in rows])
-# df.rename(columns={0: 'Session', 1: 'Student ID', 2: 'Exercise', 3: 'Activity', \
-#         4: 'Start', 5: 'End', 6: 'Idle', 7: 'Mouse Wheel', 8: 'Wheel Click', \
-#         9: 'Left Click', 10: 'Right Click', 11: 'Mouse Movement', 12: 'Keystroke'}, inplace=True)
-# #df = df.sort_values(by=['Start'], ascending=[True])
+############################## CREATE AGGREGATE TABLE AND INSERT ALL DATA INTO IT ###################################################
 
-# user_id = df['Student ID']
-
-# trace1 = Scatter(
-#     x=df['Left Click'],
-#     y=df['Right Click'],
-#     text=user_id,
-#     mode='markers'
-# )
-# layout = Layout(
-#     title='Left Mouse Click vs Right Mouse Click',
-#     xaxis=XAxis(title='Left Mouse Click'),
-#     yaxis=YAxis(title='Right Mouse Click'),
-# )
-# data = Data([trace1])
-# fig = Figure(data=data, layout=layout)
-# py.iplot(fig, filename='comparison')
+ins_conn = sqlite3.connect('combined.sqlite')
+ins_conn.execute('''
+    DROP TABLE IF EXISTS COMBINED
+    ''')
+ins_conn.execute('''
+    CREATE TABLE
+    IF NOT EXISTS COMBINED(
+        ST TEXT,
+        RATIO REAL
+    );''')
+for key in school_income_ratio:
+	ins_conn.execute('''
+		insert into COMBINED values (?,?);
+		''', (key, school_income_ratio[key]))
+ins_conn.commit()
+ins_conn.close()
