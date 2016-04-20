@@ -3,7 +3,7 @@ library(dplyr)
 library(data.table)
 library(ggplot2)
 
-# this one works!!
+# find average for faculty salary  
 scorecard = group_by(Scorecard, st_fips) %>% filter(AVGFACSAL != "NA") %>% summarize(mean = mean(AVGFACSAL))
 
 # find average for state income in survey
